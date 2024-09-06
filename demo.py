@@ -63,7 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--imagedir', type=str)
     parser.add_argument('--calib', type=str)
     parser.add_argument('--name', type=str, help='name your run', default='result')
-    parser.add_argument('--stride', type=int, default=2)
+    parser.add_argument('--stride', type=int, default=1)
     parser.add_argument('--skip', type=int, default=0)
     parser.add_argument('--config', default="config/default.yaml")
     parser.add_argument('--timeit', action='store_true')
@@ -84,20 +84,18 @@ if __name__ == '__main__':
     (poses, tstamps), (points, colors, calib) = run(cfg, args.network, args.imagedir, args.calib, args.stride, args.skip, args.viz, args.timeit)
     trajectory = PoseTrajectory3D(positions_xyz=poses[:,:3], orientations_quat_wxyz=poses[:, [6, 3, 4, 5]], timestamps=tstamps)
 
+    output_dir = Path("results") / args.name
+
     if args.save_ply:
-        save_ply(args.name, points, colors)
+        save_ply(output_dir, points, colors)
 
     if args.save_colmap:
-        save_output_for_COLMAP(args.name, trajectory, points, colors, *calib)
+        save_output_for_COLMAP(output_dir, trajectory, points, colors, *calib, Path(args.imagedir))
 
     if args.save_trajectory:
         Path("saved_trajectories").mkdir(exist_ok=True)
-        file_interface.write_tum_trajectory_file(f"saved_trajectories/{args.name}.txt", trajectory)
+        file_interface.write_tum_trajectory_file(f"{output_dir}/traj.txt", trajectory)
 
     if args.plot:
         Path("trajectory_plots").mkdir(exist_ok=True)
-        plot_trajectory(trajectory, title=f"DPVO Trajectory Prediction for {args.name}", filename=f"trajectory_plots/{args.name}.pdf")
-
-
-        
-
+        plot_trajectory(trajectory, title=f"DPVO Trajectory Prediction for {args.name}", filename=f"{output_dir}/plot.pdf")
