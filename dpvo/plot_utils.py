@@ -65,7 +65,6 @@ def save_output_for_COLMAP(
     """Saves the sparse point cloud and camera poses such that it can be opened in COLMAP"""
 
     save_path, images_save_dir, sparse_save_dir = init_file_structure(output_dir)
-    scale = 10  # for visualization
 
     # w2c to c2w
     traj = PoseTrajectory3D(
@@ -97,6 +96,10 @@ def save_output_for_COLMAP(
             f"Warning: Number of poses ({world2cam.shape[0]}) does not match number of images ({len(images_list)})"
         )
     colmap_utils.save_images_txt(world2cam, images_list, sparse_save_dir)
+    camera_entities = colmap_utils.read_cameras_text(sparse_save_dir / "cameras.txt")
+    colmap_utils.write_cameras_binary(camera_entities, sparse_save_dir / "cameras.bin")
+    images_entities = colmap_utils.read_images_text(sparse_save_dir / "images.txt")
+    colmap_utils.write_images_binary(images_entities, sparse_save_dir / "images.bin")
 
     # Save pointcloud
     colors, vertices = colmap_utils.save_pointcloud_with_normals(
